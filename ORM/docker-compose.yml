@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  pgadmin:
+    image: dpage/pgadmin4:8.12
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "nbd@postgres.pl"
+      PGADMIN_DEFAULT_PASSWORD: "password"
+    ports:
+      - "80:80"
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+  db:
+    image: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "NBD_Restaurant"
+      POSTGRES_USER: "nbd"
+      POSTGRES_PASSWORD: "nbdpassword"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg:/var/lib/postgresql/data
+volumes:
+  pgadmin:
+  pg:
