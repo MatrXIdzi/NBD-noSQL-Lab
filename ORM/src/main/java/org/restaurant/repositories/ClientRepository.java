@@ -1,30 +1,32 @@
 package org.restaurant.repositories;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.restaurant.clients.Client;
-
-import java.util.ArrayList;
 import java.util.List;
 
-public class ClientRepository implements Repository <Client> {
+public class ClientRepository implements Repository<Client> {
 
-    private List <Client> clients = new ArrayList <Client>();
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Override
     public void add(Client client) {
-
+        entityManager.persist(client);
     }
 
     @Override
     public void remove(Client client) {
-
+        entityManager.remove(entityManager.contains(client) ? client : entityManager.merge(client));
     }
 
     @Override
     public int count() {
-        return 0;
+        return ((Number) entityManager.createQuery("SELECT COUNT(c) FROM Client c").getSingleResult()).intValue();
     }
 
     @Override
     public Client get(int ID) {
-        return null;
+        return entityManager.find(Client.class, ID);
     }
 }
