@@ -10,6 +10,10 @@ public class ClientRepository implements Repository<Client> {
     @PersistenceContext
     private EntityManager entityManager;
 
+    public ClientRepository(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
+
     @Override
     public void add(Client client) {
         entityManager.persist(client);

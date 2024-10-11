@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 public abstract class Element {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private int ID;
 
     @Column(name = "price_per_person", nullable = false)

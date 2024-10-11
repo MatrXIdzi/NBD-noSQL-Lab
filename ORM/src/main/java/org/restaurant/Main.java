@@ -20,11 +20,10 @@ public class Main {
         // Ustawienia JPA
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("default");
         EntityManager em = emf.createEntityManager();
-
         // Inicjalizacja repozytoriów
-        ClientRepository clientRepository = new ClientRepository();
-        ElementRepository elementRepository = new ElementRepository();
-        ReservationRepository reservationRepository = new ReservationRepository();
+        ClientRepository clientRepository = new ClientRepository(em);
+        ElementRepository elementRepository = new ElementRepository(em);
+        ReservationRepository reservationRepository = new ReservationRepository(em);
 
         // Dodajemy encje do bazy
         em.getTransaction().begin();

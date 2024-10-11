@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 @DiscriminatorValue("Hall")
 public class Hall extends Element {
 
-    @Column(name = "base_price", nullable = false)
+    @Column(name = "base_price")
     private double basePrice;
 
     @Column(name = "has_dance_floor")
