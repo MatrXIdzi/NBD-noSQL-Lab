@@ -1,8 +1,13 @@
 package org.restaurant.repositories;
 
+import org.restaurant.clients.Client;
 import org.restaurant.elements.Element;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ElementRepository implements Repository <Element> {
+    private List<Element> elements = new ArrayList<Element>();
     @Override
     public void add(Element element) {
 

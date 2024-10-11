@@ -1,9 +1,12 @@
 package org.restaurant.clients;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import org.restaurant.reservations.Reservation;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class Client {
 
@@ -12,7 +15,7 @@ public class Client {
     private String lastName;
     private String personalID;
 
-    private List <Reservation> Reservations = new ArrayList<>();
+    private List<Reservation> Reservations = new ArrayList<>();
 
     public Client(String firstName, String lastName, String personalID) {
         this.firstName = firstName;
@@ -43,4 +46,6 @@ public class Client {
     public void setPersonalID(String personalID) {
         this.personalID = personalID;
     }
+
+
 }
