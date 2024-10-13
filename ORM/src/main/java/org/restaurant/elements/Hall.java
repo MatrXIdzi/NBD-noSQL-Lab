@@ -3,14 +3,15 @@ package org.restaurant.elements;
 import jakarta.persistence.*;
 
 @Entity
-@DiscriminatorValue("Hall")
 public class Hall extends Element {
-
-    @Column(name = "base_price")
+    @Column(name = "base_price", nullable = false)
     private double basePrice;
 
-    @Column(name = "has_dance_floor")
+    @Column(name = "has_dance_floor", nullable = false)
     private boolean hasDanceFloor;
+
+    @Column(name = "has_bar", nullable = false)
+    private boolean hasBar;
 
     public void setBasePrice(double basePrice) {
         this.basePrice = basePrice;
@@ -24,9 +25,15 @@ public class Hall extends Element {
         this.hasBar = hasBar;
     }
 
-    @Column(name = "has_bar")
-    private boolean hasBar;
+    public double getBasePrice() {
+        return basePrice;
+    }
 
+    public boolean isDanceFloor() {
+        return hasDanceFloor;
+    }
 
-    // Getters and setters...
+    public boolean isBar() {
+        return hasBar;
+    }
 }

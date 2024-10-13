@@ -5,10 +5,8 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "elements")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "element_type")
+@Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Element {
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int ID;
@@ -21,8 +19,6 @@ public abstract class Element {
 
     @Column(name = "name", nullable = false)
     private String name;
-
-    // Getters and setters...
 
     public int getID() {
         return ID;

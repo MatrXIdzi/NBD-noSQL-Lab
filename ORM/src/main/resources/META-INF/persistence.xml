@@ -1,4 +1,3 @@
-
 <persistence xmlns="http://java.sun.com/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
@@ -6,7 +5,6 @@
 
 <!-- Define persistence unit -->
 <persistence-unit name="default" transaction-type="RESOURCE_LOCAL">
-  <description>description</description>
   <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
   <class>org.restaurant.clients.Client</class>
   <class>org.restaurant.reservations.Reservation</class>
@@ -17,7 +15,7 @@
   <class>org.restaurant.repositories.ClientRepository</class>
   <class>org.restaurant.repositories.ElementRepository</class>
   <class>org.restaurant.repositories.ReservationRepository</class>
-  <exclude-unlisted-classes>false</exclude-unlisted-classes>
+  <exclude-unlisted-classes>true</exclude-unlisted-classes>
 
 
   <properties>
@@ -27,13 +25,7 @@
     <property name="jakarta.persistence.jdbc.password" value="nbd" /> <!-- DB Password -->
 
     <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/> <!-- DB Dialect -->
-    <property name="hibernate.hbm2ddl.auto" value="update" /> <!-- create / create-drop / update -->
-
-    <!--      <property name="hibernate.hikari.minimumIdle" value="5" /> &lt;!&ndash; Minimum number of idle connections in the pool &ndash;&gt;-->
-    <!--      <property name="hibernate.hikari.maximumPoolSize" value="20" /> &lt;!&ndash; Maximum number of connections in the pool &ndash;&gt;-->
-    <!--      <property name="hibernate.hikari.idleTimeout" value="300000" /> &lt;!&ndash; Idle connection timeout in milliseconds &ndash;&gt;-->
-    <!--      <property name="hibernate.hikari.connectionTimeout" value="30000" /> &lt;!&ndash; Connection timeout in milliseconds &ndash;&gt;-->
-    <!--      <property name="hibernate.hikari.maxLifetime" value="1800000" /> &lt;!&ndash; Maximum lifetime of a connection in milliseconds &ndash;&gt;-->
+    <property name="hibernate.hbm2ddl.auto" value="create-drop" /> <!-- create / create-drop / update -->
 
     <property name="hibernate.show_sql" value="true" /> <!-- Show SQL in console -->
     <property name="hibernate.format_sql" value="true" />  <!-- Show SQL formatted -->

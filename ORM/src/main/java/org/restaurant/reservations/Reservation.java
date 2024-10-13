@@ -8,7 +8,6 @@ import java.util.Date;
 @Entity
 @Table(name = "reservations")
 public class Reservation {
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int ID;
@@ -17,6 +16,7 @@ public class Reservation {
     private boolean active;
 
     @Column(name = "reservation_date", nullable = false)
+    @Temporal(TemporalType.DATE)
     private Date reservationDate;
 
     @ManyToOne
@@ -29,7 +29,6 @@ public class Reservation {
 
     public Reservation() {
     }
-
 
     public void setActive(boolean active) {
         this.active = active;

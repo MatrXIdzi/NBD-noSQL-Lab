@@ -1,13 +1,9 @@
 package org.restaurant.repositories;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.restaurant.clients.Client;
-import java.util.List;
 
 public class ClientRepository implements Repository<Client> {
-
-    @PersistenceContext
     private EntityManager entityManager;
 
     public ClientRepository(EntityManager entityManager) {

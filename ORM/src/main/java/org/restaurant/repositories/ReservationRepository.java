@@ -1,15 +1,9 @@
 package org.restaurant.repositories;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import org.restaurant.clients.Client;
 import org.restaurant.reservations.Reservation;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ReservationRepository implements Repository <Reservation> {
-    @PersistenceContext
     private EntityManager entityManager;
 
     public ReservationRepository(EntityManager entityManager) {
@@ -28,7 +22,7 @@ public class ReservationRepository implements Repository <Reservation> {
 
     @Override
     public int count() {
-        return ((Number) entityManager.createQuery("SELECT COUNT(c) FROM Client c").getSingleResult()).intValue();
+        return ((Number) entityManager.createQuery("SELECT COUNT(c) FROM Reservation c").getSingleResult()).intValue();
     }
 
     @Override
