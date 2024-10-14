@@ -11,6 +11,9 @@ public abstract class Element {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int ID;
 
+    @Version
+    private int version;
+
     @Column(name = "price_per_person", nullable = false)
     private double pricePerPerson;
 
