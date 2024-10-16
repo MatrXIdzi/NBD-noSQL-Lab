@@ -1,6 +1,7 @@
 package org.restaurant.repositories;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import org.restaurant.clients.Client;
 
 public class ClientRepository implements Repository<Client> {
@@ -27,6 +28,6 @@ public class ClientRepository implements Repository<Client> {
 
     @Override
     public Client get(int ID) {
-        return entityManager.find(Client.class, ID);
+        return entityManager.find(Client.class, ID, LockModeType.OPTIMISTIC_FORCE_INCREMENT);
     }
 }

@@ -12,6 +12,8 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int ID;
 
+    @Version
+    private int version;
     @Column(name = "first_name", nullable = false)
     private String firstName;
 

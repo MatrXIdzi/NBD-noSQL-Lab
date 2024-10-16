@@ -12,6 +12,9 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int ID;
 
+    @Version
+    private int version;
+
     @Column(name = "active", nullable = false)
     private boolean active;
 
