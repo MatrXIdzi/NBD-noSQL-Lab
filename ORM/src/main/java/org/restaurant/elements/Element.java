@@ -27,10 +27,6 @@ public abstract class Element {
         return ID;
     }
 
-    public void setID(int ID) {
-        this.ID = ID;
-    }
-
     public double getPricePerPerson() {
         return pricePerPerson;
     }

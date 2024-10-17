@@ -16,18 +16,15 @@ public class ReservationRepository implements Repository <Reservation> {
 
     @Override
     public void add(Reservation reservation) {
-        try {
-            if (isElementReserved(reservation.getElement().getID(), reservation.getReservationDate())) {
-                throw new IllegalArgumentException("Element is already reserved for the given date.");
-            }
-            entityManager.persist(reservation);
-        } catch (Exception e) {
-            throw e;
+        if (isElementReserved(reservation.getElement().getID(), reservation.getReservationDate())) {
+            throw new IllegalArgumentException("Element is already reserved for the given date.");
         }
+        entityManager.persist(reservation);
     }
 
     @Override
     public void remove(Reservation reservation) {
+        // if the reservation is detached, merge it
         entityManager.remove(entityManager.contains(reservation) ? reservation : entityManager.merge(reservation));
     }
 

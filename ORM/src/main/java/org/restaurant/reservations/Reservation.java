@@ -15,9 +15,6 @@ public class Reservation {
     @Version
     private int version;
 
-    @Column(name = "active", nullable = false)
-    private boolean active;
-
     @Column(name = "reservation_date", nullable = false)
     @Temporal(TemporalType.DATE)
     private Date reservationDate;
@@ -29,13 +26,6 @@ public class Reservation {
     @ManyToOne
     @JoinColumn(name = "element_id", nullable = false)
     private Element element;
-
-    public Reservation() {
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
 
     public void setReservationDate(Date reservationDate) {
         this.reservationDate = reservationDate;
@@ -51,10 +41,6 @@ public class Reservation {
 
     public int getID() {
         return ID;
-    }
-
-    public boolean isActive() {
-        return active;
     }
 
     public Date getReservationDate() {

@@ -11,10 +11,6 @@
   <class>org.restaurant.elements.Element</class>
   <class>org.restaurant.elements.Hall</class>
   <class>org.restaurant.elements.Table</class>
-  <class>org.restaurant.repositories.Repository</class>
-  <class>org.restaurant.repositories.ClientRepository</class>
-  <class>org.restaurant.repositories.ElementRepository</class>
-  <class>org.restaurant.repositories.ReservationRepository</class>
   <exclude-unlisted-classes>true</exclude-unlisted-classes>
 
 

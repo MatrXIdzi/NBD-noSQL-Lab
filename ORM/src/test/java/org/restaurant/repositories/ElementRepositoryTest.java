@@ -6,8 +6,8 @@ import jakarta.persistence.Persistence;
 import org.junit.jupiter.api.Test;
 import org.restaurant.elements.Hall;
 import org.restaurant.elements.Table;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class ElementRepositoryTest {
     @Test
     public void addElementsTest() {
@@ -35,8 +35,6 @@ public class ElementRepositoryTest {
             elementRepository.add(hall);
             elementRepository.add(table);
             em.getTransaction().commit();
-
-
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
@@ -45,20 +43,22 @@ public class ElementRepositoryTest {
         } finally {
             em.close();
         }
+
         EntityManager em2 = emf.createEntityManager();
-        ElementRepository elementRepository1 = new ElementRepository(em2);
+
+        ElementRepository elementRepository2 = new ElementRepository(em2);
 
         try {
-
             em2.getTransaction().begin();
 
-            Table fetchedTable = (Table) elementRepository1.get(table.getID());
-            Hall fetchedHall = (Hall) elementRepository1.get(hall.getID());
+            Table fetchedTable = (Table) elementRepository2.get(table.getID());
+            Hall fetchedHall = (Hall) elementRepository2.get(hall.getID());
 
             em2.getTransaction().commit();
 
             assertEquals(fetchedTable.getMaxCapacity(), table.getMaxCapacity());
             assertEquals(fetchedTable.getPricePerPerson(), table.getPricePerPerson());
+            assertEquals(fetchedTable.isPremium(), table.isPremium());
 
             assertEquals(fetchedHall.getMaxCapacity(), hall.getMaxCapacity());
             assertEquals(fetchedHall.getPricePerPerson(), hall.getPricePerPerson());

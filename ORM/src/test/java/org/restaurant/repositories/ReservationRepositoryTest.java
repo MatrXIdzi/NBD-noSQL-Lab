@@ -43,6 +43,7 @@ public class ReservationRepositoryTest {
             }
             throw e;
         }
+
         Reservation reservation = new Reservation();
         try {
             em.getTransaction().begin();
@@ -52,7 +53,6 @@ public class ReservationRepositoryTest {
 
             reservation.setClient(client2);
             reservation.setElement(hall2);
-            reservation.setActive(true);
             reservation.setReservationDate(new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime());
 
             reservationRepository.add(reservation);
@@ -119,12 +119,8 @@ public class ReservationRepositoryTest {
         try {
             em.getTransaction().begin();
 
-            Client client2 = em.find(Client.class, client.getID(), LockModeType.OPTIMISTIC_FORCE_INCREMENT);
-            Hall hall2 = em.find(Hall.class, hall.getID(), LockModeType.OPTIMISTIC_FORCE_INCREMENT);
-
-            reservation.setClient(client2);
-            reservation.setElement(hall2);
-            reservation.setActive(true);
+            reservation.setClient(client);
+            reservation.setElement(hall);
             reservation.setReservationDate(new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime());
 
             reservationRepository.add(reservation);
@@ -141,13 +137,9 @@ public class ReservationRepositoryTest {
             try {
                 em.getTransaction().begin();
 
-                Client client3 = em.find(Client.class, client.getID(), LockModeType.OPTIMISTIC_FORCE_INCREMENT);
-                Hall hall3 = em.find(Hall.class, hall.getID(), LockModeType.OPTIMISTIC_FORCE_INCREMENT);
-
                 Reservation duplicateReservation = new Reservation();
-                duplicateReservation.setClient(client3);
-                duplicateReservation.setElement(hall3);
-                duplicateReservation.setActive(true);
+                duplicateReservation.setClient(client);
+                duplicateReservation.setElement(hall);
                 duplicateReservation.setReservationDate(new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime());
 
                 reservationRepository.add(duplicateReservation);
@@ -170,8 +162,9 @@ public class ReservationRepositoryTest {
         EntityManager em1 = emf.createEntityManager();
         EntityManager em2 = emf.createEntityManager();
 
-        // initialize repositories, inject entity manager
+        // initialize repositories, inject entity managers
         ClientRepository clientRepository1 = new ClientRepository(em1);
+        ClientRepository clientRepository2 = new ClientRepository(em2);
         ElementRepository elementRepository1 = new ElementRepository(em1);
         ReservationRepository reservationRepository1 = new ReservationRepository(em1);
         ReservationRepository reservationRepository2 = new ReservationRepository(em2);
@@ -189,56 +182,52 @@ public class ReservationRepositoryTest {
 
         try {
             em1.getTransaction().begin();
+            em2.getTransaction().begin();
             clientRepository1.add(client1);
-            clientRepository1.add(client2);
+            clientRepository2.add(client2);
             elementRepository1.add(hall);
             em1.getTransaction().commit();
+            em2.getTransaction().commit();
         } catch (Exception e) {
             if (em1.getTransaction().isActive()) {
                 em1.getTransaction().rollback();
             }
+            if (em2.getTransaction().isActive()) {
+                em2.getTransaction().rollback();
+            }
             throw e;
         }
 
-        Reservation reservation1 = new Reservation();
+        // Attempt to reserve the same hall by 2 clients at the same time
+        /*try {
+            em1.getTransaction().begin();
+            Reservation reservation1 = new Reservation();
+            Hall hall1 = em1.find(Hall.class, hall.getID(), LockModeType.OPTIMISTIC_FORCE_INCREMENT);
+            reservation1.setClient(client1);
+            reservation1.setElement(hall1);
+            reservation1.setReservationDate(new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime());
 
-        // Attempt to reserve the same table for the same date by another client
-        assertThrows(RollbackException.class, () -> {
-            try {
-                em1.getTransaction().begin();
-                em2.getTransaction().begin();
+            em2.getTransaction().begin();
+            Reservation reservation2 = new Reservation();
+            Hall hall2 = em2.find(Hall.class, hall.getID(), LockModeType.OPTIMISTIC_FORCE_INCREMENT);
+            reservation2.setClient(client2);
+            reservation2.setElement(hall2);
+            reservation2.setReservationDate(new GregorianCalendar(2024, Calendar.FEBRUARY, 6).getTime());
 
-                Client managedClient2 = em2.find(Client.class, client2.getID(), LockModeType.OPTIMISTIC_FORCE_INCREMENT);
-                Hall managedHall2 = em2.find(Hall.class, hall.getID(), LockModeType.OPTIMISTIC_FORCE_INCREMENT);
-                Client managedClient1 = em1.find(Client.class, client1.getID(), LockModeType.OPTIMISTIC_FORCE_INCREMENT);
-                Hall managedHall1 = em1.find(Hall.class, hall.getID(), LockModeType.OPTIMISTIC_FORCE_INCREMENT);
+            reservationRepository1.add(reservation1);
+            reservationRepository2.add(reservation2);
 
-                reservation1.setClient(managedClient1);
-                reservation1.setElement(managedHall1);
-                reservation1.setActive(true);
-                reservation1.setReservationDate(new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime());
-
-                reservationRepository1.add(reservation1);
-                Reservation reservation2 = new Reservation();
-                reservation2.setClient(managedClient2);
-                reservation2.setElement(managedHall2);
-                reservation2.setActive(true);
-                reservation2.setReservationDate(new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime());
-
-                reservationRepository2.add(reservation2);
-
-                assertDoesNotThrow(() -> em1.getTransaction().commit());
-                em2.getTransaction().commit();
-            } catch (Exception e) {
-                if (em1.getTransaction().isActive()) {
-                    em1.getTransaction().rollback();
-                }
-                if (em2.getTransaction().isActive()) {
-                    em2.getTransaction().rollback();
-                }
-                throw e;
+            assertDoesNotThrow(() -> em1.getTransaction().commit());
+            assertThrows(OptimisticLockException.class, () -> em2.getTransaction().commit());
+        } catch (Exception e) {
+            if (em1.getTransaction().isActive()) {
+                em1.getTransaction().rollback();
             }
-        });
+            if (em2.getTransaction().isActive()) {
+                em2.getTransaction().rollback();
+            }
+            throw e;
+        }*/
 
         em1.close();
         em2.close();

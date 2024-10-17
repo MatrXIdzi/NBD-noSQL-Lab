@@ -5,8 +5,8 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import org.junit.jupiter.api.Test;
 import org.restaurant.clients.Client;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class ClientRepositoryTest {
     @Test
     public void addClientTest() {
@@ -17,7 +17,6 @@ public class ClientRepositoryTest {
 
         Client client = new Client("Jan", "Kowalski", "1234567890");
         try {
-
             em.getTransaction().begin();
             clientRepository.add(client);
             em.getTransaction().commit();
@@ -32,11 +31,11 @@ public class ClientRepositoryTest {
 
         EntityManager em2 = emf.createEntityManager();
 
-        ClientRepository clientRepository1 = new ClientRepository(em2);
+        ClientRepository clientRepository2 = new ClientRepository(em2);
 
         try {
             em2.getTransaction().begin();
-            Client fetchedClient = clientRepository1.get(client.getID());
+            Client fetchedClient = clientRepository2.get(client.getID());
             em2.getTransaction().commit();
             assertEquals(fetchedClient.getFirstName(), client.getFirstName());
             assertEquals(fetchedClient.getLastName(), client.getLastName());
