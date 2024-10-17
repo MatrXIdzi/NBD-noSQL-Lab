@@ -199,7 +199,7 @@ public class ReservationRepositoryTest {
         }
 
         // Attempt to reserve the same hall by 2 clients at the same time
-        /*try {
+        try {
             em1.getTransaction().begin();
             Reservation reservation1 = new Reservation();
             Hall hall1 = em1.find(Hall.class, hall.getID(), LockModeType.OPTIMISTIC_FORCE_INCREMENT);
@@ -218,7 +218,8 @@ public class ReservationRepositoryTest {
             reservationRepository2.add(reservation2);
 
             assertDoesNotThrow(() -> em1.getTransaction().commit());
-            assertThrows(OptimisticLockException.class, () -> em2.getTransaction().commit());
+            RollbackException rollbackException = assertThrows(RollbackException.class, () -> em2.getTransaction().commit());
+            assertInstanceOf(OptimisticLockException.class, rollbackException.getCause());
         } catch (Exception e) {
             if (em1.getTransaction().isActive()) {
                 em1.getTransaction().rollback();
@@ -227,10 +228,10 @@ public class ReservationRepositoryTest {
                 em2.getTransaction().rollback();
             }
             throw e;
-        }*/
-
-        em1.close();
-        em2.close();
-        emf.close();
+        } finally {
+            em1.close();
+            em2.close();
+            emf.close();
+        }
     }
 }
