@@ -1,27 +1,94 @@
+networks:
+  mongo-network: {}
+
 services:
-  pgadmin:
-    image: dpage/pgadmin4:8.12
+  mongo1:
+    build: .
+    container_name: mongodb1
+    hostname: mongodb1
+    ports:
+      - "27017:27017"
+    networks:
+      - mongo-network
+    command: ["--config", "/etc/mongod.conf", "--port", "27017"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
+      - MONGO_INITDB_DATABASE=restaurant
+
+  mongo2:
+    build: .
+    container_name: mongodb2
+    hostname: mongodb2
+    ports:
+      - "27018:27018"
+    networks:
+      - mongo-network
+    command: ["--config", "/etc/mongod.conf", "--port", "27018"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--port", "27018", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
+      - MONGO_INITDB_DATABASE=restaurant
+
+  mongo3:
+    build: .
+    container_name: mongodb3
+    hostname: mongodb3
+    ports:
+      - "27019:27019"
+    networks:
+      - mongo-network
+    command: ["--config", "/etc/mongod.conf", "--port", "27019"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--port", "27019", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
+      - MONGO_INITDB_DATABASE=restaurant
+
+  mongoinit:
+    build: .
+    image: mongocustom:8.0.1
+    container_name: mongodbinit
+    hostname: mongodbinit
+    networks:
+      - mongo-network
     restart: unless-stopped
     depends_on:
-      - db
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "nbd@postgres.pl"
-      PGADMIN_DEFAULT_PASSWORD: "password"
-    ports:
-      - "80:80"
-    volumes:
-      - pgadmin:/var/lib/pgadmin
-  db:
-    image: postgres:17
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: "NBD_Restaurant"
-      POSTGRES_USER: nbd
-      POSTGRES_PASSWORD: nbd
-    ports:
-      - "9888:5432"
-    volumes:
-      - pg:/var/lib/postgresql/data
-volumes:
-  pgadmin:
-  pg:
+      mongo1:
+        condition: service_healthy
+      mongo2:
+        condition: service_healthy
+      mongo3:
+        condition: service_healthy
+    command: >
+      mongosh --host mongodb1:27017 --username admin --password adminpassword --authenticationDatabase admin --eval
+      '
+      rs.initiate(
+        {
+          _id: "replica_set_single",
+          version: 1,
+          members: [
+            { _id: 0, host : "mongodb1:27017" },
+            { _id: 1, host : "mongodb2:27018" },
+            { _id: 2, host : "mongodb3:27019" }
+          ]
+        }
+      );
+      '
