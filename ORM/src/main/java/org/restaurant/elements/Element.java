@@ -1,26 +1,12 @@
 package org.restaurant.elements;
 
-import jakarta.persistence.*;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "elements")
-@Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Element {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private int ID;
 
-    @Version
-    private int version;
-
-    @Column(name = "price_per_person", nullable = false)
     private double pricePerPerson;
 
-    @Column(name = "max_capacity", nullable = false)
     private int maxCapacity;
 
-    @Column(name = "name", nullable = false)
     private String name;
 
     public int getID() {
