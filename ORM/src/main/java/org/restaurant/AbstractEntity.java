@@ -5,20 +5,20 @@ import org.bson.codecs.pojo.annotations.BsonProperty;
 import java.io.Serializable;
 import java.util.UUID;
 
-public class AbstractEntityMgd implements Serializable {
+public abstract class AbstractEntity implements Serializable {
 
     @BsonProperty("_id")
-    private final UUID id; //kwapi ma tutaj swoj uuid
+    private final UUID id;
 
     public UUID getEntityId() {
         return id;
     }
 
-    public AbstractEntityMgd() {
+    public AbstractEntity() {
         this.id = UUID.randomUUID();
     }
 
-    public AbstractEntityMgd(UUID id) {
+    public AbstractEntity(UUID id) {
         this.id = id;
     }
 }

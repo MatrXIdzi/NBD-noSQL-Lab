@@ -1,7 +1,10 @@
-package org.restaurant.elements;
+package org.restaurant.model;
 
-public abstract class Element {
-    private int ID;
+import org.restaurant.AbstractEntity;
+
+import java.util.UUID;
+
+public abstract class Element extends AbstractEntity {
 
     private double pricePerPerson;
 
@@ -9,8 +12,18 @@ public abstract class Element {
 
     private String name;
 
-    public int getID() {
-        return ID;
+    public Element(double pricePerPerson, int maxCapacity, String name) {
+        super();
+        this.pricePerPerson = pricePerPerson;
+        this.maxCapacity = maxCapacity;
+        this.name = name;
+    }
+
+    public Element(UUID id, double pricePerPerson, int maxCapacity, String name) {
+        super(id);
+        this.pricePerPerson = pricePerPerson;
+        this.maxCapacity = maxCapacity;
+        this.name = name;
     }
 
     public double getPricePerPerson() {

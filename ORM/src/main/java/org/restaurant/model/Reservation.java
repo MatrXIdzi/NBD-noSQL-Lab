@@ -1,17 +1,31 @@
-package org.restaurant.reservations;
+package org.restaurant.model;
 
-import org.restaurant.clients.Client;
-import org.restaurant.elements.Element;
+import org.restaurant.AbstractEntity;
+
 import java.util.Date;
+import java.util.UUID;
 
-public class Reservation {
-    private int ID;
+public class Reservation extends AbstractEntity {
 
     private Date reservationDate;
 
     private Client client;
 
     private Element element;
+
+    public Reservation(Date reservationDate, Client client, Element element) {
+        super();
+        this.reservationDate = reservationDate;
+        this.client = client;
+        this.element = element;
+    }
+
+    public Reservation(UUID id, Date reservationDate, Client client, Element element) {
+        super(id);
+        this.reservationDate = reservationDate;
+        this.client = client;
+        this.element = element;
+    }
 
     public void setReservationDate(Date reservationDate) {
         this.reservationDate = reservationDate;
@@ -23,10 +37,6 @@ public class Reservation {
 
     public void setElement(Element element) {
         this.element = element;
-    }
-
-    public int getID() {
-        return ID;
     }
 
     public Date getReservationDate() {

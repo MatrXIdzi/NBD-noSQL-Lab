@@ -1,13 +1,13 @@
-package org.restaurant.clients;
+package org.restaurant.model;
 
-import org.restaurant.reservations.Reservation;
+import org.restaurant.AbstractEntity;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 
-public class Client {
-
-    private int ID;
+public class Client extends AbstractEntity {
 
     private String firstName;
 
@@ -18,17 +18,19 @@ public class Client {
     private List<Reservation> reservations = new ArrayList<>();
 
     public Client(String firstName, String lastName, String personalID) {
+        super();
         this.firstName = firstName;
         this.lastName = lastName;
         this.personalID = personalID;
     }
 
-    public Client() {
+    public Client(UUID id, String firstName, String lastName, String personalID) {
+        super(id);
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.personalID = personalID;
     }
 
-    public int getID() {
-        return ID;
-    }
 
     public String getFirstName() {
         return firstName;
@@ -53,6 +55,4 @@ public class Client {
     public void setPersonalID(String personalID) {
         this.personalID = personalID;
     }
-
-
 }
