@@ -39,7 +39,7 @@ public class ReservationRepository {
     public void update(Reservation reservation) {
         long modifiedCount = collection.replaceOne(eq("_id", reservation.getEntityId().toString()), reservation).getModifiedCount();
         if (modifiedCount == 0) {
-            throw new IllegalArgumentException("Element not found");
+            throw new IllegalArgumentException("Reservation not found");
         }
     }
 
