@@ -18,7 +18,7 @@ public class ClientRepository {
     }
 
     public void create(Client client) {
-        collection.insertOne(client).wasAcknowledged();
+        collection.insertOne(client);
     }
 
     public Client read(UUID id) {
@@ -30,7 +30,6 @@ public class ClientRepository {
     }
 
     public void update(Client client) {
-
         long modifiedCount = collection.replaceOne(eq("_id", client.getEntityId().toString()), client).getModifiedCount();
         if (modifiedCount == 0) {
             throw new IllegalArgumentException("Client not found");

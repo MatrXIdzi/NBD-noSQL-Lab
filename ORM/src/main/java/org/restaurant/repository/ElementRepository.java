@@ -2,7 +2,6 @@ package org.restaurant.repository;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import org.bson.types.ObjectId;
 import org.restaurant.model.Element;
 
 import java.util.ArrayList;
@@ -19,7 +18,7 @@ public class ElementRepository {
     }
 
     public void create(Element element) {
-        collection.insertOne(element).wasAcknowledged();
+        collection.insertOne(element);
     }
 
     public Element read(UUID id) {

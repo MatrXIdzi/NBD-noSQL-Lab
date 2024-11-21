@@ -25,7 +25,7 @@ public class ReservationRepository {
     }
 
     public void create(Reservation reservation) {
-        collection.insertOne(reservation).wasAcknowledged();
+        collection.insertOne(reservation);
     }
 
     public Reservation read(UUID id) {
@@ -37,7 +37,10 @@ public class ReservationRepository {
     }
 
     public void update(Reservation reservation) {
-        collection.replaceOne(eq("_id", reservation.getEntityId().toString()), reservation);
+        long modifiedCount = collection.replaceOne(eq("_id", reservation.getEntityId().toString()), reservation).getModifiedCount();
+        if (modifiedCount == 0) {
+            throw new IllegalArgumentException("Element not found");
+        }
     }
 
     public void delete(UUID id) {

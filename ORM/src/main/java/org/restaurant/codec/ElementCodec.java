@@ -29,7 +29,6 @@ public class ElementCodec implements Codec<Element> {
         } else if (element instanceof Table table) {
             writer.writeString("type", "Table");
             writer.writeBoolean("premium", table.isPremium());
-            // Add other Table-specific fields
         }
 
         writer.writeEndDocument();
@@ -49,11 +48,9 @@ public class ElementCodec implements Codec<Element> {
             double basePrice = reader.readDouble("basePrice");
             boolean hasDanceFloor = reader.readBoolean("hasDanceFloor");
             boolean hasBar = reader.readBoolean("hasBar");
-            // Read other Hall-specific fields
             element = new Hall(id, pricePerPerson, maxCapacity, name, hasDanceFloor, hasBar, basePrice);
         } else if ("Table".equals(type)) {
             boolean premium = reader.readBoolean("premium");
-            // Read other Table-specific fields
             element = new Table(id, pricePerPerson, maxCapacity, name, premium);
         }
 

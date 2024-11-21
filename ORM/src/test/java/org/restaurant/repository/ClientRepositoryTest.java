@@ -52,6 +52,7 @@ public class ClientRepositoryTest {
         Client updatedClient = clientRepository.read(clientId);
         assertNotNull(updatedClient);
         assertEquals("Janet", updatedClient.getFirstName());
+        assertEquals("Doe", updatedClient.getLastName());
     }
 
     @Test
@@ -59,7 +60,7 @@ public class ClientRepositoryTest {
         UUID clientId = UUID.randomUUID();
         Client client = new Client(clientId, "Non", "Existent", "00000000000");
 
-        assertThrows(Exception.class, () -> clientRepository.update(client));
+        assertThrows(IllegalArgumentException.class, () -> clientRepository.update(client));
     }
 
     @Test
