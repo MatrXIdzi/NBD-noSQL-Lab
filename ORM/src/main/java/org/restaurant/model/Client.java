@@ -15,8 +15,6 @@ public class Client extends AbstractEntity {
 
     private String personalID;
 
-    private List<Reservation> reservations = new ArrayList<>();
-
     public Client(String firstName, String lastName, String personalID) {
         super();
         this.firstName = firstName;
