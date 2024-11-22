@@ -2,8 +2,6 @@ package org.restaurant.model;
 
 import org.restaurant.AbstractEntity;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 
@@ -14,8 +12,6 @@ public class Client extends AbstractEntity {
     private String lastName;
 
     private String personalID;
-
-    private List<Reservation> reservations = new ArrayList<>();
 
     public Client(String firstName, String lastName, String personalID) {
         super();
