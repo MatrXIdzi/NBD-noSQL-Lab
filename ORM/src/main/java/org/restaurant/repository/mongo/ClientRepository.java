@@ -1,4 +1,4 @@
-package org.restaurant.repository;
+package org.restaurant.repository.mongo;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;

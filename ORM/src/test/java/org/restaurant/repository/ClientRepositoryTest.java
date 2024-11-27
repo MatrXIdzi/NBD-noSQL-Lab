@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.restaurant.MongoRepository;
 import org.restaurant.model.Client;
+import org.restaurant.repository.mongo.ClientRepository;
 
 import java.util.UUID;
 

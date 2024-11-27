@@ -8,6 +8,7 @@ import org.restaurant.MongoRepository;
 import org.restaurant.model.Element;
 import org.restaurant.model.Hall;
 import org.restaurant.model.Table;
+import org.restaurant.repository.mongo.ElementRepository;
 
 import java.util.List;
 import java.util.UUID;

@@ -10,6 +10,7 @@ import org.restaurant.model.Client;
 import org.restaurant.model.Element;
 import org.restaurant.model.Reservation;
 import org.restaurant.model.Table;
+import org.restaurant.repository.mongo.ReservationRepository;
 
 import java.util.Calendar;
 import java.util.Date;
