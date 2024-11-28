@@ -2,7 +2,9 @@ package org.restaurant.repository.mongo;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import org.restaurant.model.Client;
 import org.restaurant.model.Element;
+import org.restaurant.repository.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,10 +12,10 @@ import java.util.UUID;
 
 import static com.mongodb.client.model.Filters.eq;
 
-public class ElementRepository {
+public class MongoElementRepository implements Repository<Element> {
     private final MongoCollection<Element> collection;
 
-    public ElementRepository(MongoDatabase database) {
+    public MongoElementRepository(MongoDatabase database) {
         this.collection = database.getCollection("elements", Element.class);
     }
 

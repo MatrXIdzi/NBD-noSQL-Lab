@@ -6,20 +6,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.restaurant.MongoRepository;
 import org.restaurant.model.Client;
-import org.restaurant.repository.mongo.ClientRepository;
+import org.restaurant.repository.mongo.MongoClientRepository;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientRepositoryTest {
-    private static ClientRepository clientRepository;
+    private static MongoClientRepository clientRepository;
     private static MongoRepository mongoRepository;
 
     @BeforeAll
     public static void setUp() {
         mongoRepository = new MongoRepository();
-        clientRepository = new ClientRepository(mongoRepository.getRestaurantDB());
+        clientRepository = new MongoClientRepository(mongoRepository.getRestaurantDB());
     }
 
     @BeforeEach

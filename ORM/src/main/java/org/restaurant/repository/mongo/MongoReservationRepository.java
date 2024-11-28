@@ -3,7 +3,9 @@ package org.restaurant.repository.mongo;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
+import org.restaurant.model.Client;
 import org.restaurant.model.Reservation;
+import org.restaurant.repository.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +14,10 @@ import java.util.UUID;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Indexes.ascending;
 
-public class ReservationRepository {
+public class MongoReservationRepository implements Repository<Reservation> {
     private final MongoCollection<Reservation> collection;
 
-    public ReservationRepository(MongoDatabase database) {
+    public MongoReservationRepository(MongoDatabase database) {
         this.collection = database.getCollection("reservations", Reservation.class);
         createUniqueIndex();
     }

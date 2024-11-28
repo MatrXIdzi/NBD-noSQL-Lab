@@ -3,6 +3,7 @@ package org.restaurant.repository.mongo;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.restaurant.model.Client;
+import org.restaurant.repository.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,10 +11,10 @@ import java.util.UUID;
 
 import static com.mongodb.client.model.Filters.eq;
 
-public class ClientRepository {
+public class MongoClientRepository implements Repository<Client> {
     private final MongoCollection<Client> collection;
 
-    public ClientRepository(MongoDatabase database) {
+    public MongoClientRepository(MongoDatabase database) {
         this.collection = database.getCollection("clients", Client.class);
     }
 

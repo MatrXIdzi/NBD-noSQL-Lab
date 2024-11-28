@@ -8,7 +8,7 @@ import org.restaurant.MongoRepository;
 import org.restaurant.model.Element;
 import org.restaurant.model.Hall;
 import org.restaurant.model.Table;
-import org.restaurant.repository.mongo.ElementRepository;
+import org.restaurant.repository.mongo.MongoElementRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,13 +16,13 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ElementRepositoryTest {
-    private static ElementRepository elementRepository;
+    private static MongoElementRepository elementRepository;
     private static MongoRepository mongoRepository;
 
     @BeforeAll
     public static void setUp() {
         mongoRepository = new MongoRepository();
-        elementRepository = new ElementRepository(mongoRepository.getRestaurantDB());
+        elementRepository = new MongoElementRepository(mongoRepository.getRestaurantDB());
     }
 
     @BeforeEach

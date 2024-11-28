@@ -10,7 +10,7 @@ import org.restaurant.model.Client;
 import org.restaurant.model.Element;
 import org.restaurant.model.Reservation;
 import org.restaurant.model.Table;
-import org.restaurant.repository.mongo.ReservationRepository;
+import org.restaurant.repository.mongo.MongoReservationRepository;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -20,13 +20,13 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ReservationRepositoryTest {
-    private static ReservationRepository reservationRepository;
+    private static MongoReservationRepository reservationRepository;
     private static MongoRepository mongoRepository;
 
     @BeforeAll
     public static void setUp() {
         mongoRepository = new MongoRepository();
-        reservationRepository = new ReservationRepository(mongoRepository.getRestaurantDB());
+        reservationRepository = new MongoReservationRepository(mongoRepository.getRestaurantDB());
     }
 
     @BeforeEach
