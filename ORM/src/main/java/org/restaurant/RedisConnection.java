@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class RedisConnection {
-    private JedisPool pool;
+    private JedisPooled pool;
     private String host;
     private int port;
 
@@ -27,10 +27,14 @@ public class RedisConnection {
         }
 
         JedisClientConfig clientConfig = DefaultJedisClientConfig.builder().socketTimeoutMillis(1000).build();
-        pool = new JedisPool(new HostAndPort(host, port), clientConfig);
+        pool = new JedisPooled(new HostAndPort(host, port), clientConfig);
     }
 
-    public JedisPool getJedisPool() {
+    public JedisPooled getJedisPooled() {
         return pool;
+    }
+
+    public void clearCache() {
+        getJedisPooled().flushAll();
     }
 }

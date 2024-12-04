@@ -5,29 +5,38 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.bson.Document;
 import org.restaurant.MongoRepository;
+import org.restaurant.RedisConnection;
 import org.restaurant.model.Element;
 import org.restaurant.model.Hall;
 import org.restaurant.model.Table;
 import org.restaurant.repository.mongo.MongoElementRepository;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ElementRepositoryTest {
-    private static MongoElementRepository elementRepository;
+    private static ElementRepository elementRepository;
     private static MongoRepository mongoRepository;
+    private static RedisConnection redisConnection;
 
     @BeforeAll
     public static void setUp() {
         mongoRepository = new MongoRepository();
-        elementRepository = new MongoElementRepository(mongoRepository.getRestaurantDB());
+        try {
+            redisConnection = new RedisConnection();
+            elementRepository = new ElementRepository(mongoRepository.getRestaurantDB(), redisConnection);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @BeforeEach
     public void clearDatabase() {
         mongoRepository.getRestaurantDB().getCollection("elements").deleteMany(new Document());
+        redisConnection.clearCache();
     }
 
     @Test

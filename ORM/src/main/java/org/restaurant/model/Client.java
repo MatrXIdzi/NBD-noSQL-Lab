@@ -1,5 +1,7 @@
 package org.restaurant.model;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.restaurant.AbstractEntity;
 
 import java.util.UUID;
@@ -50,5 +52,14 @@ public class Client extends AbstractEntity {
 
     public void setPersonalID(String personalID) {
         this.personalID = personalID;
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return new ObjectMapper().writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

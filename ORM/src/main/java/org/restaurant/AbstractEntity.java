@@ -6,12 +6,14 @@ import java.io.Serializable;
 import java.util.UUID;
 
 public abstract class AbstractEntity implements Serializable {
-
-    @BsonProperty("_id")
     private final UUID id;
 
     public UUID getEntityId() {
         return id;
+    }
+
+    public UUID getId() {
+        return getEntityId();
     }
 
     public AbstractEntity() {

@@ -17,32 +17,32 @@ public class ElementRepository implements Repository<Element> {
     public ElementRepository(MongoDatabase database, RedisConnection redisConnection) {
         mongoElementRepository = new MongoElementRepository(database);
         this.redisConnection = redisConnection;
-        pool = redisConnection.getPool();
+        pool = redisConnection.getJedisPooled();
     }
 
 
     @Override
     public void create(Element element) {
-
+        mongoElementRepository.create(element);
     }
 
     @Override
     public void update(Element element) {
-
+        mongoElementRepository.update(element);
     }
 
     @Override
     public void delete(UUID id) {
-
+        mongoElementRepository.delete(id);
     }
 
     @Override
     public Element read(UUID id) {
-        return null;
+        return mongoElementRepository.read(id);
     }
 
     @Override
     public List<Element> readAll() {
-        return List.of();
+        return mongoElementRepository.readAll();
     }
 }
