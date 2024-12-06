@@ -9,7 +9,6 @@ import org.restaurant.RedisConnection;
 import org.restaurant.model.Element;
 import org.restaurant.model.Hall;
 import org.restaurant.model.Table;
-import org.restaurant.repository.mongo.MongoElementRepository;
 
 import java.io.IOException;
 import java.util.List;
@@ -51,6 +50,7 @@ public class ElementRepositoryTest {
         assertEquals("TableName", retrievedElement.getName());
         assertEquals(20.0, retrievedElement.getPricePerPerson());
         assertEquals(10, retrievedElement.getMaxCapacity());
+        assertTrue(((Table)retrievedElement).isPremium());
     }
 
     @Test
@@ -65,6 +65,8 @@ public class ElementRepositoryTest {
         Element updatedElement = elementRepository.read(elementId);
         assertNotNull(updatedElement);
         assertEquals("UpdatedElementName", updatedElement.getName());
+        assertTrue(((Hall)updatedElement).isDanceFloor());
+        assertTrue(((Hall)updatedElement).isBar());
     }
 
     @Test

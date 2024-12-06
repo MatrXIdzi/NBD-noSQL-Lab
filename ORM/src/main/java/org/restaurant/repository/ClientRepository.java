@@ -1,6 +1,5 @@
 package org.restaurant.repository;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoDatabase;
 import org.restaurant.RedisConnection;
@@ -18,7 +17,6 @@ public class ClientRepository implements Repository<Client> {
     private final MongoClientRepository mongoClientRepository;
     private final JedisPooled pool;
     private final static String HASHPREFIX = "client:";
-    private final ObjectMapper mapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(ClientRepository.class);
 
     public ClientRepository(MongoDatabase database, RedisConnection redisConnection) {
@@ -28,29 +26,30 @@ public class ClientRepository implements Repository<Client> {
 
     @Override
     public void create(Client client) {
-        logger.debug("Create client {}", client);
+        //logger.debug("Create client {}", client);
         mongoClientRepository.create(client);
         setClientInRedis(client);
     }
 
     private void setClientInRedis(Client client) {
-        logger.debug("Setting/updating client data in Redis with id {}...", client.getEntityId());
+        logger.debug("Setting client data in Redis with id {}...", client.getEntityId());
         try {
-            String clientJSON = mapper.writeValueAsString(client);
-            pool.jsonSet(HASHPREFIX + client.getEntityId(), clientJSON);
+            pool.jsonSetWithEscape(HASHPREFIX + client.getEntityId(), client);
             pool.expire(HASHPREFIX + client.getEntityId(), 20);
         } catch (JedisConnectionException e) {
-            logger.warn("Connection to Redis failed, cannot set/update client with id {} in cache", client.getEntityId());
-        }
-        catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            logger.warn("Connection to Redis failed, cannot set client with id {} in cache", client.getEntityId());
         }
     }
 
     @Override
     public void update(Client client) {
         mongoClientRepository.update(client);
-        pool.jsonDel(HASHPREFIX + client.getEntityId());
+        try {
+            pool.jsonDel(HASHPREFIX + client.getEntityId());
+        }
+        catch (JedisConnectionException e) {
+            logger.warn("Connection to Redis failed, cannot invalidate client with id {} in cache", client.getEntityId());
+        }
     }
 
     @Override
@@ -66,19 +65,21 @@ public class ClientRepository implements Repository<Client> {
 
     @Override
     public Client read(UUID id) {
-        logger.debug("Reading client with id {}...", id);
+        //logger.debug("Reading client with id {}...", id);
         try {
-            if (pool.exists(HASHPREFIX + id)) {
-                logger.debug("Client with id {} exists in Redis, retrieving from cache...", id);
-                return pool.jsonGet(HASHPREFIX + id, Client.class);
-            }
+            Client client = pool.jsonGet(HASHPREFIX + id, Client.class);
+            if (client == null) throw new IllegalArgumentException();
+            logger.debug("Client with id {} exists in Redis, retrieving from cache...", id);
+            return client;
         }
         catch (JedisConnectionException e) {
             logger.warn("Connection to Redis failed, reading client with id {} directly from Mongo...", id);
             return mongoClientRepository.read(id);
         }
-        logger.debug("Client with id {} does not exist in Redis, retrieving from Mongo...", id);
-        return mongoClientRepository.read(id);
+        catch (IllegalArgumentException e) {
+            logger.debug("Client with id {} does not exist in Redis, retrieving from Mongo...", id);
+            return mongoClientRepository.read(id);
+        }
     }
 
     @Override

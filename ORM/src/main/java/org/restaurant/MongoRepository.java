@@ -14,7 +14,6 @@ import org.bson.codecs.pojo.PojoCodecProvider;
 import org.restaurant.codec.ClientCodec;
 import org.restaurant.codec.ElementCodec;
 import org.restaurant.codec.ReservationCodec;
-import org.slf4j.Logger;
 
 import java.util.List;
 

@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.restaurant.MongoRepository;
 import org.restaurant.RedisConnection;
 import org.restaurant.model.Client;
-import org.restaurant.repository.mongo.MongoClientRepository;
 
 import java.io.IOException;
 import java.util.UUID;

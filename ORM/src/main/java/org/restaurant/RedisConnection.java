@@ -32,6 +32,7 @@ public class RedisConnection {
 
         JedisClientConfig clientConfig = DefaultJedisClientConfig.builder().socketTimeoutMillis(100).build();
         pool = new JedisPooled(new HostAndPort(host, port), clientConfig);
+        pool.setJsonObjectMapper(new RedisJsonObjectMapper());
     }
 
     public JedisPooled getJedisPooled() {
