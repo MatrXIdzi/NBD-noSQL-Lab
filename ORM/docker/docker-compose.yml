@@ -1,108 +1,59 @@
 networks:
-  mongo-network: {}
-  redis-network: {}
+  cassandranet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
+
 services:
-  mongo1:
-    build: .
-    container_name: mongodb1
-    hostname: mongodb1
+  cassandra1:
+    image: docker.io/bitnami/cassandra:latest
+    hostname: cassandra1
     ports:
-      - "27017:27017"
-    networks:
-      - mongo-network
-    command: ["--config", "/etc/mongod.conf", "--port", "27017"]
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 2s
-      retries: 5
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
-      - MONGO_INITDB_DATABASE=restaurant
-
-  mongo2:
-    build: .
-    container_name: mongodb2
-    hostname: mongodb2
-    ports:
-      - "27018:27018"
-    networks:
-      - mongo-network
-    command: ["--config", "/etc/mongod.conf", "--port", "27018"]
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mongosh", "--port", "27018", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 2s
-      retries: 5
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
-      - MONGO_INITDB_DATABASE=restaurant
-
-  mongo3:
-    build: .
-    container_name: mongodb3
-    hostname: mongodb3
-    ports:
-      - "27019:27019"
-    networks:
-      - mongo-network
-    command: ["--config", "/etc/mongod.conf", "--port", "27019"]
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mongosh", "--port", "27019", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 2s
-      retries: 5
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
-      - MONGO_INITDB_DATABASE=restaurant
-
-  mongoinit:
-    build: .
-    image: mongocustom:8.0.1
-    container_name: mongodbinit
-    hostname: mongodbinit
-    networks:
-      - mongo-network
-    restart: unless-stopped
-    depends_on:
-      mongo1:
-        condition: service_healthy
-      mongo2:
-        condition: service_healthy
-      mongo3:
-        condition: service_healthy
-    command: >
-      mongosh --host mongodb1:27017 --username admin --password adminpassword --authenticationDatabase admin --eval
-      '
-      rs.initiate(
-        {
-          _id: "replica_set_single",
-          version: 1,
-          members: [
-            { _id: 0, host : "mongodb1:27017" },
-            { _id: 1, host : "mongodb2:27018" },
-            { _id: 2, host : "mongodb3:27019" }
-          ]
-        }
-      );
-      '
-
-  redis-stack:
-    image: redis/redis-stack:latest
+      - 7000:7000
+      - 9042:9042
     volumes:
-      - redis-stack-data:/bitnami/redis/data
-    ports:
-      - "8001:8001"
-      - "6379:6379"
+      - cassandra1_data:/bitnami
     networks:
-      - redis-network
+      cassandranet:
+        ipv4_address: 172.18.0.11
+    environment:
+      - CASSANDRA_LISTEN_ADDRESS=cassandra1
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra1
+      - CASSANDRA_SEEDS=cassandra1,cassandra2
+      - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
+      - CASSANDRA_DATACENTER = dc1
+      - CASSANDRA_PASSWORD_SEEDER=yes
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_USER = cassandra
+      - CASSANDRA_PASSWORD=cassandrapassword
+      - MAX_HEAP_SIZE=2G
+      - HEAP_NEWSIZE=200M
+
+  cassandra2:
+    image: docker.io/bitnami/cassandra:latest
+    hostname: cassandra2
+    ports:
+      - 9043:9042
+    volumes:
+      - cassandra2_data:/bitnami
+    networks:
+      cassandranet:
+        ipv4_address: 172.18.0.12
+    environment:
+      - CASSANDRA_LISTEN_ADDRESS=cassandra2
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra2
+      - CASSANDRA_SEEDS=cassandra1,cassandra2
+      - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
+      - CASSANDRA_DATACENTER = dc1
+      - CASSANDRA_PASSWORD_SEEDER=yes
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_USER = cassandra
+      - CASSANDRA_PASSWORD=cassandrapassword
+      - MAX_HEAP_SIZE=2G
+      - HEAP_NEWSIZE=200M
 
 volumes:
-  redis-stack-data:
-    driver: local
+  cassandra1_data:
+  cassandra2_data:

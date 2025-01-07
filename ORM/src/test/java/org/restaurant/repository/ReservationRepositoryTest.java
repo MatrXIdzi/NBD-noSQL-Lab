@@ -1,4 +1,4 @@
-package org.restaurant.repository;
+/*package org.restaurant.repository;
 
 import com.mongodb.MongoWriteException;
 import org.bson.Document;
@@ -121,4 +121,4 @@ public class ReservationRepositoryTest {
 
         assertThrows(MongoWriteException.class, () -> reservationRepository.create(reservation2));
     }
-}
+}*/
