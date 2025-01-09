@@ -1,11 +1,11 @@
-/*package org.restaurant.repository;
+package org.restaurant.repository;
 
-import org.bson.Document;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.restaurant.MongoRepository;
-import org.restaurant.RedisConnection;
+import org.restaurant.CassandraConnector;
 import org.restaurant.model.Client;
 
 import java.io.IOException;
@@ -14,25 +14,25 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientRepositoryTest {
-    private static ClientRepository clientRepository;
-    private static MongoRepository mongoRepository;
-    private static RedisConnection redisConnection;
+    private static CassandraClientRepository clientRepository;
+    private static CassandraConnector connector;
 
     @BeforeAll
     public static void setUp() {
-        mongoRepository = new MongoRepository();
-        try {
-            redisConnection = new RedisConnection();
-            clientRepository = new ClientRepository(mongoRepository.getRestaurantDB(), redisConnection);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        connector = new CassandraConnector();
+        connector.initSession();
+        clientRepository = new CassandraClientRepository(connector.getSession());
+    }
+
+    @AfterAll
+    public static void disconnect() {
+        connector.close();
     }
 
     @BeforeEach
     public void clearDatabase() {
-        mongoRepository.getRestaurantDB().getCollection("clients").deleteMany(new Document());
-        redisConnection.clearCache();
+        String truncateQuery = "TRUNCATE restaurant.clients";
+        connector.getSession().execute(SimpleStatement.newInstance(truncateQuery));
     }
 
     @Test
@@ -90,4 +90,4 @@ public class ClientRepositoryTest {
 
         assertDoesNotThrow(() -> clientRepository.delete(clientId));
     }
-}*/
+}
