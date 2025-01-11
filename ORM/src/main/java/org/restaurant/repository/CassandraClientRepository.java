@@ -4,6 +4,7 @@ import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.Row;
+import org.restaurant.CassandraConnector;
 import org.restaurant.cassandra.*;
 import org.restaurant.model.Client;
 
@@ -26,7 +27,7 @@ public class CassandraClientRepository implements Repository<Client> {
 
     @Override
     public void update(Client client) {
-        clientDao.updateClient(ModelMapper.toClientCassandra(client));
+        if (!clientDao.updateClient(ModelMapper.toClientCassandra(client))) throw new IllegalArgumentException();
     }
 
     @Override
@@ -36,10 +37,13 @@ public class CassandraClientRepository implements Repository<Client> {
 
     @Override
     public Client read(UUID id) {
-        return ModelMapper.toClient(clientDao.getClientById(id));
+        ClientCassandra clientCassandra = clientDao.getClientById(id);
+        if (clientCassandra == null) {
+            return null;
+        }
+        return ModelMapper.toClient(clientCassandra);
     }
 
-    @Override
     public List<Client> readAll() {
         PagingIterable<ClientCassandra> iterable = clientDao.getAllClients();
         List<Client> clientsList = new ArrayList<>();

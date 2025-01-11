@@ -7,7 +7,6 @@ import java.util.UUID;
 
 @Dao
 public interface ClientCassandraDao {
-
     @Insert
     void insertClient(ClientCassandra client);
 
@@ -17,8 +16,8 @@ public interface ClientCassandraDao {
     @Select
     PagingIterable<ClientCassandra> getAllClients();
 
-    @Update
-    void updateClient(ClientCassandra client);
+    @Update(ifExists = true)
+    boolean updateClient(ClientCassandra client);
 
     @Delete(entityClass = ClientCassandra.class)
     void deleteClientById(UUID id);

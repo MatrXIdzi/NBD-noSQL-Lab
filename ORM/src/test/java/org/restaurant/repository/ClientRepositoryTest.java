@@ -1,6 +1,10 @@
 package org.restaurant.repository;
 
+import com.datastax.oss.driver.api.core.ConsistencyLevel;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.datastax.oss.driver.api.core.servererrors.TruncateException;
+import com.datastax.oss.driver.api.core.type.DataTypes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,10 +15,11 @@ import org.restaurant.model.Client;
 import java.io.IOException;
 import java.util.UUID;
 
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createTable;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientRepositoryTest {
-    private static CassandraClientRepository clientRepository;
+    private static Repository<Client> clientRepository;
     private static CassandraConnector connector;
 
     @BeforeAll
@@ -32,7 +37,24 @@ public class ClientRepositoryTest {
     @BeforeEach
     public void clearDatabase() {
         String truncateQuery = "TRUNCATE restaurant.clients";
-        connector.getSession().execute(SimpleStatement.newInstance(truncateQuery));
+        try {
+            connector.getSession().execute(SimpleStatement.newInstance(truncateQuery));
+        } catch (TruncateException e) {
+            // truncate requires ALL nodes to be up; if it fails, we just drop the table and re-create it
+            String dropTableQuery = "DROP TABLE IF EXISTS restaurant.clients";
+            connector.getSession().execute(dropTableQuery);
+
+            SimpleStatement createClients =
+                    createTable(CqlIdentifier.fromCql("clients"))
+                            .ifNotExists()
+                            .withPartitionKey(CqlIdentifier.fromCql("client_id"), DataTypes.UUID)
+                            .withColumn(CqlIdentifier.fromCql("first_name"), DataTypes.TEXT)
+                            .withColumn(CqlIdentifier.fromCql("last_name"), DataTypes.TEXT)
+                            .withColumn(CqlIdentifier.fromCql("personal_id"), DataTypes.TEXT)
+                            .build();
+
+            connector.getSession().execute(createClients);
+        }
     }
 
     @Test

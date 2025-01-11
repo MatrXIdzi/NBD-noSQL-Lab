@@ -11,7 +11,7 @@ services:
     image: docker.io/bitnami/cassandra:latest
     hostname: cassandra1
     ports:
-      - 7000:7000
+#      - 7000:7000
       - 9042:9042
     volumes:
       - cassandra1_data:/bitnami
@@ -27,15 +27,16 @@ services:
     environment:
       - CASSANDRA_LISTEN_ADDRESS=cassandra1
       - CASSANDRA_BROADCAST_ADDRESS=cassandra1
-      - CASSANDRA_SEEDS=cassandra1,cassandra2
+      - CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3
       - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
       - CASSANDRA_DATACENTER = dc1
       - CASSANDRA_PASSWORD_SEEDER=yes
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - CASSANDRA_USER = cassandra
       - CASSANDRA_PASSWORD=cassandrapassword
-      - MAX_HEAP_SIZE=2G
-      - HEAP_NEWSIZE=200M
+      - CASSANDRA_CFG_YAML_DEFAULT_KEYSPACE_RF=3
+      - MAX_HEAP_SIZE=3G
+      - HEAP_NEWSIZE=300M
 
   cassandra2:
     image: docker.io/bitnami/cassandra:latest
@@ -56,16 +57,48 @@ services:
     environment:
       - CASSANDRA_LISTEN_ADDRESS=cassandra2
       - CASSANDRA_BROADCAST_ADDRESS=cassandra2
-      - CASSANDRA_SEEDS=cassandra1,cassandra2
+      - CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3
       - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
       - CASSANDRA_DATACENTER = dc1
       - CASSANDRA_PASSWORD_SEEDER=yes
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - CASSANDRA_USER = cassandra
       - CASSANDRA_PASSWORD=cassandrapassword
-      - MAX_HEAP_SIZE=2G
-      - HEAP_NEWSIZE=200M
+      - CASSANDRA_CFG_YAML_DEFAULT_KEYSPACE_RF=3
+      - MAX_HEAP_SIZE=3G
+      - HEAP_NEWSIZE=300M
+
+  cassandra3:
+    image: docker.io/bitnami/cassandra:latest
+    hostname: cassandra3
+    ports:
+      - 9044:9042
+    volumes:
+      - cassandra3_data:/bitnami
+    healthcheck:
+      test: [ "CMD-SHELL", "nodetool status | grep -q 'UN.*172.18.0.13'" ]
+      interval: 15s
+      timeout: 10s
+      retries: 6
+      start_period: 30s
+    networks:
+      cassandranet:
+        ipv4_address: 172.18.0.13
+    environment:
+      - CASSANDRA_LISTEN_ADDRESS=cassandra3
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra3
+      - CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3
+      - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
+      - CASSANDRA_DATACENTER = dc1
+      - CASSANDRA_PASSWORD_SEEDER=yes
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_USER = cassandra
+      - CASSANDRA_PASSWORD=cassandrapassword
+      - CASSANDRA_CFG_YAML_DEFAULT_KEYSPACE_RF=3
+      - MAX_HEAP_SIZE=3G
+      - HEAP_NEWSIZE=300M
 
 volumes:
   cassandra1_data:
   cassandra2_data:
+  cassandra3_data:

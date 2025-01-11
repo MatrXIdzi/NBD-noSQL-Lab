@@ -9,4 +9,7 @@ import com.datastax.oss.driver.api.mapper.annotations.Mapper;
 public interface DaoMapper {
     @DaoFactory
     ClientCassandraDao getClientDao(@DaoKeyspace CqlIdentifier keyspace);
+
+    @DaoFactory
+    ElementCassandraDao getElementDao(@DaoKeyspace CqlIdentifier keyspace);
 }

@@ -26,6 +26,8 @@ public class CassandraConnector {
             // if "restaurant" keyspace doesn't exist, create it and then re-attempt to create the session
             createRestaurantKeyspace();
             session = builder.build();
+            // populate the newly-created keyspace with tables
+            createTables();
         }
     }
 
@@ -49,13 +51,13 @@ public class CassandraConnector {
         CqlSession temporaryNoKeyspaceSession = prepareSessionBuilder().build();
         CreateKeyspace keyspace = createKeyspace(CqlIdentifier.fromCql("restaurant"))
                 .ifNotExists()
-                .withSimpleStrategy(2) // replication factor
+                .withSimpleStrategy(3) // replication factor
                 .withDurableWrites(true);
         SimpleStatement createKeyspace = keyspace.build();
         temporaryNoKeyspaceSession.execute(createKeyspace);
     }
 
-    public void createTables() {
+    private void createTables() {
         SimpleStatement createElements =
                 createTable(CqlIdentifier.fromCql("elements"))
                         .ifNotExists()
@@ -66,8 +68,8 @@ public class CassandraConnector {
                         .withColumn(CqlIdentifier.fromCql("max_capacity"), DataTypes.INT)
                         .withColumn(CqlIdentifier.fromCql("premium"), DataTypes.BOOLEAN)
                         .withColumn(CqlIdentifier.fromCql("base_price"), DataTypes.DOUBLE)
-                        .withColumn(CqlIdentifier.fromCql("has_dance_floor"), DataTypes.BOOLEAN)
-                        .withColumn(CqlIdentifier.fromCql("has_bar"), DataTypes.BOOLEAN)
+                        .withColumn(CqlIdentifier.fromCql("dance_floor"), DataTypes.BOOLEAN)
+                        .withColumn(CqlIdentifier.fromCql("bar"), DataTypes.BOOLEAN)
                         .build();
 
         session.execute(createElements);

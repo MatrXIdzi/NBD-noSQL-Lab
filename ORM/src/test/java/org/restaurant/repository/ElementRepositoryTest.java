@@ -1,56 +1,91 @@
-/*package org.restaurant.repository;
+package org.restaurant.repository;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.bson.Document;
-import org.restaurant.MongoRepository;
-import org.restaurant.RedisConnection;
+import com.datastax.oss.driver.api.core.ConsistencyLevel;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.datastax.oss.driver.api.core.servererrors.TruncateException;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import org.junit.jupiter.api.*;
+import org.restaurant.CassandraConnector;
 import org.restaurant.model.Element;
 import org.restaurant.model.Hall;
 import org.restaurant.model.Table;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createTable;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ElementRepositoryTest {
-    private static ElementRepository elementRepository;
-    private static MongoRepository mongoRepository;
-    private static RedisConnection redisConnection;
+    private static CassandraElementRepository elementRepository;
+    private static CassandraConnector connector;
 
     @BeforeAll
     public static void setUp() {
-        mongoRepository = new MongoRepository();
-        try {
-            redisConnection = new RedisConnection();
-            elementRepository = new ElementRepository(mongoRepository.getRestaurantDB(), redisConnection);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        connector = new CassandraConnector();
+        connector.initSession();
+        elementRepository = new CassandraElementRepository(connector.getSession());
+    }
+
+    @AfterAll
+    public static void disconnect() {
+        connector.close();
     }
 
     @BeforeEach
     public void clearDatabase() {
-        mongoRepository.getRestaurantDB().getCollection("elements").deleteMany(new Document());
-        redisConnection.clearCache();
+        String truncateQuery = "TRUNCATE restaurant.elements";
+        try {
+            connector.getSession().execute(SimpleStatement.newInstance(truncateQuery));
+        } catch (TruncateException e) {
+            // truncate requires ALL nodes to be up; if it fails, we just drop the table and re-create it
+            String dropTableQuery = "DROP TABLE IF EXISTS restaurant.elements";
+            connector.getSession().execute(dropTableQuery);
+
+            SimpleStatement createElements =
+                    createTable(CqlIdentifier.fromCql("elements"))
+                            .ifNotExists()
+                            .withPartitionKey(CqlIdentifier.fromCql("element_type"), DataTypes.TEXT)
+                            .withClusteringColumn(CqlIdentifier.fromCql("element_id"), DataTypes.UUID)
+                            .withColumn(CqlIdentifier.fromCql("name"), DataTypes.TEXT)
+                            .withColumn(CqlIdentifier.fromCql("price_per_person"), DataTypes.DOUBLE)
+                            .withColumn(CqlIdentifier.fromCql("max_capacity"), DataTypes.INT)
+                            .withColumn(CqlIdentifier.fromCql("premium"), DataTypes.BOOLEAN)
+                            .withColumn(CqlIdentifier.fromCql("base_price"), DataTypes.DOUBLE)
+                            .withColumn(CqlIdentifier.fromCql("dance_floor"), DataTypes.BOOLEAN)
+                            .withColumn(CqlIdentifier.fromCql("bar"), DataTypes.BOOLEAN)
+                            .build();
+
+            connector.getSession().execute(createElements);
+        }
     }
 
     @Test
-    public void testCreateAndReadElement() {
-        UUID elementId = UUID.randomUUID();
-        Element element = new Table(elementId, 20.0, 10, "TableName", true);
-        elementRepository.create(element);
+    public void testCreateAndReadElements() {
+        Element table = new Table(UUID.randomUUID(), 20.0, 10, "TableName", true);
+        Element hall = new Hall(UUID.randomUUID(), 15.0, 120, "HallName", true, false, 150.0);
 
-        Element retrievedElement = elementRepository.read(elementId);
-        assertNotNull(retrievedElement);
-        assertEquals(elementId, retrievedElement.getEntityId());
-        assertEquals("TableName", retrievedElement.getName());
-        assertEquals(20.0, retrievedElement.getPricePerPerson());
-        assertEquals(10, retrievedElement.getMaxCapacity());
-        assertTrue(((Table)retrievedElement).isPremium());
+        elementRepository.create(table);
+        elementRepository.create(hall);
+
+        Element retrievedTable = elementRepository.readTable(table.getId());
+        assertNotNull(retrievedTable);
+        assertEquals(table.getId(), retrievedTable.getId());
+        assertEquals("TableName", retrievedTable.getName());
+        assertEquals(20.0, retrievedTable.getPricePerPerson());
+        assertEquals(10, retrievedTable.getMaxCapacity());
+        assertTrue(((Table)retrievedTable).isPremium());
+
+        Element retrievedHall = elementRepository.readHall(hall.getId());
+        assertNotNull(retrievedHall);
+        assertEquals(hall.getId(), retrievedHall.getId());
+        assertEquals("HallName", retrievedHall.getName());
+        assertEquals(15.0, retrievedHall.getPricePerPerson());
+        assertEquals(120, retrievedHall.getMaxCapacity());
+        assertTrue(((Hall)retrievedHall).isDanceFloor());
+        assertFalse(((Hall)retrievedHall).isBar());
+        assertEquals(150.0, ((Hall)retrievedHall).getBasePrice());
     }
 
     @Test
@@ -62,7 +97,7 @@ public class ElementRepositoryTest {
         element.setName("UpdatedElementName");
         elementRepository.update(element);
 
-        Element updatedElement = elementRepository.read(elementId);
+        Element updatedElement = elementRepository.readHall(elementId);
         assertNotNull(updatedElement);
         assertEquals("UpdatedElementName", updatedElement.getName());
         assertTrue(((Hall)updatedElement).isDanceFloor());
@@ -83,9 +118,9 @@ public class ElementRepositoryTest {
         Element element = new Table(elementId, 10.0, 10, "TableName", false);
         elementRepository.create(element);
 
-        elementRepository.delete(elementId);
+        elementRepository.deleteTable(elementId);
 
-        Element deletedElement = elementRepository.read(elementId);
+        Element deletedElement = elementRepository.readTable(elementId);
         assertNull(deletedElement);
     }
 
@@ -93,7 +128,8 @@ public class ElementRepositoryTest {
     public void testDeleteNonExistentElement() {
         UUID elementId = UUID.randomUUID();
 
-        assertDoesNotThrow(() -> elementRepository.delete(elementId));
+        assertDoesNotThrow(() -> elementRepository.deleteTable(elementId));
+        assertDoesNotThrow(() -> elementRepository.deleteHall(elementId));
     }
 
     @Test
@@ -106,16 +142,26 @@ public class ElementRepositoryTest {
         Element table2 = new Table(tableId2, 25.0, 8, "Table2", false);
         elementRepository.create(table2);
 
-        UUID hallId = UUID.randomUUID();
-        Element hall = new Hall(hallId, 15.0, 120, "Hall", true, true, 150.0);
-        elementRepository.create(hall);
+        UUID hallId1 = UUID.randomUUID();
+        Element hall1 = new Hall(hallId1, 15.0, 120, "Hall", true, false, 150.0);
+        elementRepository.create(hall1);
 
-        List<Element> elements = elementRepository.readAll();
-        assertNotNull(elements);
-        assertEquals(3, elements.size());
+        UUID hallId2 = UUID.randomUUID();
+        Element hall2 = new Hall(hallId2, 25.0, 128, "Better Hall", true, true, 350.0);
+        elementRepository.create(hall2);
 
-        assertTrue(elements.stream().anyMatch(e -> e.getEntityId().equals(tableId1) && e.getName().equals("Table1")));
-        assertTrue(elements.stream().anyMatch(e -> e.getEntityId().equals(tableId2) && e.getName().equals("Table2")));
-        assertTrue(elements.stream().anyMatch(e -> e.getEntityId().equals(hallId) && e.getName().equals("Hall")));
+        List<Element> tables = elementRepository.readAllTables();
+        assertNotNull(tables);
+        assertEquals(2, tables.size());
+
+        List<Element> halls = elementRepository.readAllHalls();
+        assertNotNull(halls);
+        assertEquals(2, halls.size());
+
+        assertTrue(tables.stream().anyMatch(e -> e.getEntityId().equals(tableId1) && e.getName().equals("Table1")));
+        assertTrue(tables.stream().anyMatch(e -> e.getEntityId().equals(tableId2) && e.getName().equals("Table2")));
+
+        assertTrue(halls.stream().anyMatch(e -> e.getEntityId().equals(hallId1) && e.getName().equals("Hall")));
+        assertTrue(halls.stream().anyMatch(e -> e.getEntityId().equals(hallId2) && e.getName().equals("Better Hall")));
     }
-}*/
+}
