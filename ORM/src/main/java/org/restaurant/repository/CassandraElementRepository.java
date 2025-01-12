@@ -4,7 +4,6 @@ import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import org.restaurant.cassandra.*;
-import org.restaurant.model.Client;
 import org.restaurant.model.Element;
 
 import java.util.ArrayList;

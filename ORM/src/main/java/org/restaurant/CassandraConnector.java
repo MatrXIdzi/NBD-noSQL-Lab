@@ -4,9 +4,7 @@ import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.CqlSessionBuilder;
 import com.datastax.oss.driver.api.core.InvalidKeyspaceException;
-import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
-import com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder;
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.querybuilder.schema.CreateKeyspace;
 
@@ -35,6 +33,7 @@ public class CassandraConnector {
         return CqlSession.builder()
                 .addContactPoint(new InetSocketAddress("cassandra1", 9042))
                 .addContactPoint(new InetSocketAddress("cassandra2", 9043))
+                .addContactPoint(new InetSocketAddress("cassandra3", 9044))
                 .withLocalDatacenter("dc1")
                 .withAuthCredentials("cassandra", "cassandrapassword");
     }
@@ -55,6 +54,7 @@ public class CassandraConnector {
                 .withDurableWrites(true);
         SimpleStatement createKeyspace = keyspace.build();
         temporaryNoKeyspaceSession.execute(createKeyspace);
+        temporaryNoKeyspaceSession.close();
     }
 
     private void createTables() {
@@ -78,7 +78,7 @@ public class CassandraConnector {
                 createTable(CqlIdentifier.fromCql("reservations_by_client"))
                         .ifNotExists()
                         .withPartitionKey(CqlIdentifier.fromCql("client_id"), DataTypes.UUID)
-                        .withClusteringColumn(CqlIdentifier.fromCql("date"), DataTypes.DATE)
+                        .withClusteringColumn(CqlIdentifier.fromCql("reservation_date"), DataTypes.DATE)
                         .withClusteringColumn(CqlIdentifier.fromCql("element_id"), DataTypes.UUID)
                         .withColumn(CqlIdentifier.fromCql("element_name"), DataTypes.TEXT)
                         .build();
@@ -88,7 +88,7 @@ public class CassandraConnector {
         SimpleStatement createReservationsByDate =
                 createTable(CqlIdentifier.fromCql("reservations_by_date"))
                         .ifNotExists()
-                        .withPartitionKey(CqlIdentifier.fromCql("date"), DataTypes.DATE)
+                        .withPartitionKey(CqlIdentifier.fromCql("reservation_date"), DataTypes.DATE)
                         .withClusteringColumn(CqlIdentifier.fromCql("element_id"), DataTypes.UUID)
                         .withColumn(CqlIdentifier.fromCql("element_type"), DataTypes.TEXT)
                         .build();

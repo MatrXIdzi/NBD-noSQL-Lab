@@ -1,6 +1,5 @@
 package org.restaurant.repository;
 
-import com.datastax.oss.driver.api.core.ConsistencyLevel;
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.servererrors.TruncateException;
@@ -12,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.restaurant.CassandraConnector;
 import org.restaurant.model.Client;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createTable;

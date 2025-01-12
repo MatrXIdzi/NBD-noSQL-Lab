@@ -2,7 +2,6 @@ package org.restaurant.cassandra;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.mapper.MapperContext;
 import com.datastax.oss.driver.api.mapper.entity.EntityHelper;

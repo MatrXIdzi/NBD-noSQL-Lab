@@ -2,26 +2,24 @@ package org.restaurant;
 
 import com.datastax.oss.driver.api.core.ConsistencyLevel;
 import com.datastax.oss.driver.api.core.CqlIdentifier;
-import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.datastax.oss.driver.api.querybuilder.select.Select;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.restaurant.cassandra.*;
 import org.restaurant.model.Client;
 import org.restaurant.model.Element;
+import org.restaurant.model.Reservation;
 import org.restaurant.model.Table;
 
-import java.util.List;
-import java.util.UUID;
+import java.time.ZoneId;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-//@Disabled
 public class CassandraTest {
     private static CassandraConnector connector;
 
@@ -125,6 +123,44 @@ public class CassandraTest {
         elementDao.deleteTableById(table3.getEntityId());
 
         assertNull(elementDao.getTableById(table.getId()));
+    }
+
+    @Test
+    public void CRDReservationTest() {
+        DaoMapper mapper = new DaoMapperBuilder(connector.getSession()).build();
+        ReservationCassandraDao reservationDao = mapper.getReservationDao(CqlIdentifier.fromCql("restaurant"));
+
+        // Create and read
+        Client client = new Client("John", "Doe", "12345678901");
+        Element element = new Table(20.0, 10, "TableName", true);
+        UUID reservationId = UUID.randomUUID();
+
+        Date date = new GregorianCalendar(2024, Calendar.FEBRUARY, 10).getTime();
+        Reservation reservation = new Reservation(reservationId, date, client, element);
+
+        reservationDao.createReservation(reservation);
+
+        ReservationByClientCassandra retrievedReservationByClient = reservationDao.getAllReservationsByClient(client.getId()).one();
+        ReservationByDateCassandra retrievedReservationByDate =
+                reservationDao.getAllReservationsByDate(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()).one();
+
+        assertNotNull(retrievedReservationByClient);
+        assertNotNull(retrievedReservationByDate);
+
+        assertEquals(client.getId(), retrievedReservationByClient.getClientId());
+        assertEquals(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), retrievedReservationByClient.getReservationDate());
+        assertEquals(element.getId(), retrievedReservationByClient.getElementId());
+        assertEquals(element.getName(), retrievedReservationByClient.getElementName());
+
+        assertEquals(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), retrievedReservationByDate.getReservationDate());
+        assertEquals(element.getEntityId(), retrievedReservationByDate.getElementId());
+        assertEquals("table", retrievedReservationByDate.getElementType());
+
+        // Delete
+        reservationDao.deleteReservation(client.getId(), date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), element.getId());
+
+        assertTrue(reservationDao.getAllReservationsByClient(client.getId()).all().isEmpty());
+        assertTrue(reservationDao.getAllReservationsByDate(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()).all().isEmpty());
     }
 
     @Test

@@ -3,8 +3,6 @@ package org.restaurant.repository;
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
-import com.datastax.oss.driver.api.core.cql.Row;
-import org.restaurant.CassandraConnector;
 import org.restaurant.cassandra.*;
 import org.restaurant.model.Client;
 

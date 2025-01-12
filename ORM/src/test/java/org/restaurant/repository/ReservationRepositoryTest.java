@@ -1,37 +1,81 @@
-/*package org.restaurant.repository;
+package org.restaurant.repository;
 
-import com.mongodb.MongoWriteException;
-import org.bson.Document;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.datastax.oss.driver.api.core.servererrors.TruncateException;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.restaurant.MongoRepository;
+import org.restaurant.CassandraConnector;
+import org.restaurant.cassandra.ReservationByClientCassandra;
 import org.restaurant.model.Client;
 import org.restaurant.model.Element;
 import org.restaurant.model.Reservation;
 import org.restaurant.model.Table;
-import org.restaurant.repository.mongo.MongoReservationRepository;
 
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.UUID;
 
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createTable;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ReservationRepositoryTest {
-    private static MongoReservationRepository reservationRepository;
-    private static MongoRepository mongoRepository;
+    private static CassandraReservationRepository reservationRepository;
+    private static CassandraConnector connector;
 
     @BeforeAll
     public static void setUp() {
-        mongoRepository = new MongoRepository();
-        reservationRepository = new MongoReservationRepository(mongoRepository.getRestaurantDB());
+        connector = new CassandraConnector();
+        connector.initSession();
+        reservationRepository = new CassandraReservationRepository(connector.getSession());
+    }
+
+    @AfterAll
+    public static void disconnect() {
+        connector.close();
     }
 
     @BeforeEach
     public void clearDatabase() {
-        mongoRepository.getRestaurantDB().getCollection("reservations").deleteMany(new Document());
+        String truncateQuery1 = "TRUNCATE restaurant.reservations_by_client";
+        String truncateQuery2 = "TRUNCATE restaurant.reservations_by_date";
+        try {
+            connector.getSession().execute(SimpleStatement.newInstance(truncateQuery1));
+            connector.getSession().execute(SimpleStatement.newInstance(truncateQuery2));
+        } catch (TruncateException e) {
+            // truncate requires ALL nodes to be up; if it fails, we just drop the tables and re-create them
+            String dropTableQuery1 = "DROP TABLE IF EXISTS restaurant.reservations_by_client";
+            connector.getSession().execute(dropTableQuery1);
+
+            String dropTableQuery2 = "DROP TABLE IF EXISTS restaurant.reservations_by_date";
+            connector.getSession().execute(dropTableQuery2);
+
+            SimpleStatement createReservationsByClient =
+                    createTable(CqlIdentifier.fromCql("reservations_by_client"))
+                            .ifNotExists()
+                            .withPartitionKey(CqlIdentifier.fromCql("client_id"), DataTypes.UUID)
+                            .withClusteringColumn(CqlIdentifier.fromCql("reservation_date"), DataTypes.DATE)
+                            .withClusteringColumn(CqlIdentifier.fromCql("element_id"), DataTypes.UUID)
+                            .withColumn(CqlIdentifier.fromCql("element_name"), DataTypes.TEXT)
+                            .build();
+
+            connector.getSession().execute(createReservationsByClient);
+
+            SimpleStatement createReservationsByDate =
+                    createTable(CqlIdentifier.fromCql("reservations_by_date"))
+                            .ifNotExists()
+                            .withPartitionKey(CqlIdentifier.fromCql("reservation_date"), DataTypes.DATE)
+                            .withClusteringColumn(CqlIdentifier.fromCql("element_id"), DataTypes.UUID)
+                            .withColumn(CqlIdentifier.fromCql("element_type"), DataTypes.TEXT)
+                            .build();
+
+            connector.getSession().execute(createReservationsByDate);
+        }
     }
 
     @Test
@@ -43,42 +87,11 @@ public class ReservationRepositoryTest {
         Reservation reservation = new Reservation(reservationId, date, client, element);
         reservationRepository.create(reservation);
 
-        Reservation retrievedReservation = reservationRepository.read(reservationId);
+        ReservationByClientCassandra retrievedReservation = reservationRepository.readAllReservationsByClient(client.getId()).getFirst();
         assertNotNull(retrievedReservation);
-        assertEquals(reservationId, retrievedReservation.getEntityId());
-        assertEquals(date, retrievedReservation.getReservationDate());
-        assertEquals(client.getEntityId(), retrievedReservation.getClient().getEntityId());
-        assertEquals(element.getEntityId(), retrievedReservation.getElement().getEntityId());
-    }
-
-    @Test
-    public void testUpdateReservation() {
-        Client client = new Client("John", "Doe", "12345678901");
-        Element element = new Table(20.0, 10, "TableName", true);
-        UUID reservationId = UUID.randomUUID();
-        Date date = new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime();
-        Reservation reservation = new Reservation(reservationId, date, client, element);
-        reservationRepository.create(reservation);
-
-        Date date2 = new GregorianCalendar(2024, Calendar.MARCH, 5).getTime();
-        reservation.setReservationDate(date2);
-        reservationRepository.update(reservation);
-
-        Reservation updatedReservation = reservationRepository.read(reservationId);
-        assertNotNull(updatedReservation);
-        assertEquals(client.getEntityId(), updatedReservation.getClient().getEntityId());
-        assertEquals(date2, updatedReservation.getReservationDate());
-    }
-
-    @Test
-    public void testUpdateNonExistentReservation() {
-        Client client = new Client("John", "Doe", "12345678901");
-        Element element = new Table(20.0, 10, "TableName", true);
-        UUID reservationId = UUID.randomUUID();
-        Date date = new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime();
-        Reservation reservation = new Reservation(reservationId, date, client, element);
-
-        assertThrows(IllegalArgumentException.class, () -> reservationRepository.update(reservation));
+        assertEquals(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), retrievedReservation.getReservationDate());
+        assertEquals(client.getEntityId(), retrievedReservation.getClientId());
+        assertEquals(element.getEntityId(), retrievedReservation.getElementId());
     }
 
     @Test
@@ -88,19 +101,23 @@ public class ReservationRepositoryTest {
         UUID reservationId = UUID.randomUUID();
         Date date = new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime();
         Reservation reservation = new Reservation(reservationId, date, client, element);
+
         reservationRepository.create(reservation);
 
-        reservationRepository.delete(reservationId);
+        reservationRepository.delete(reservation);
 
-        Reservation deletedReservation = reservationRepository.read(reservationId);
-        assertNull(deletedReservation);
+        assertTrue(reservationRepository.readAllReservationsByClient(client.getId()).isEmpty());
     }
 
     @Test
     public void testDeleteNonExistentReservation() {
+        Client client = new Client("Jane", "Doe", "12345678901");
+        Element element = new Table(22.0, 10, "TableName", true);
         UUID reservationId = UUID.randomUUID();
+        Date date = new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime();
+        Reservation reservation = new Reservation(reservationId, date, client, element);
 
-        assertDoesNotThrow(() -> reservationRepository.delete(reservationId));
+        assertDoesNotThrow(() -> reservationRepository.delete(reservation));
     }
 
     @Test
@@ -119,6 +136,6 @@ public class ReservationRepositoryTest {
 
         reservationRepository.create(reservation);
 
-        assertThrows(MongoWriteException.class, () -> reservationRepository.create(reservation2));
+        assertThrows(IllegalStateException.class, () -> reservationRepository.create(reservation2));
     }
-}*/
+}

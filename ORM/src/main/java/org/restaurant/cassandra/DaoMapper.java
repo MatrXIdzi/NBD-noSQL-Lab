@@ -12,4 +12,7 @@ public interface DaoMapper {
 
     @DaoFactory
     ElementCassandraDao getElementDao(@DaoKeyspace CqlIdentifier keyspace);
+
+    @DaoFactory
+    ReservationCassandraDao getReservationDao(@DaoKeyspace CqlIdentifier keyspace);
 }
