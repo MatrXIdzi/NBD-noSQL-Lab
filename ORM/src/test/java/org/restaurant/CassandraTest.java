@@ -162,18 +162,4 @@ public class CassandraTest {
         assertTrue(reservationDao.getAllReservationsByClient(client.getId()).all().isEmpty());
         assertTrue(reservationDao.getAllReservationsByDate(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()).all().isEmpty());
     }
-
-    @Test
-    public void getAllTablesTest() {
-        DaoMapper mapper = new DaoMapperBuilder(connector.getSession()).build();
-        ElementCassandraDao elementDao = mapper.getElementDao(CqlIdentifier.fromCql("restaurant"));
-
-        PagingIterable<TableCassandra> tables = elementDao.getAllTables();
-
-        for (ElementCassandra elementCassandra : tables) {
-            Element element = ModelMapper.toElement(elementCassandra);
-            System.out.println(element.getName());
-            System.out.println(((Table) element).isPremium());
-        }
-    }
 }
