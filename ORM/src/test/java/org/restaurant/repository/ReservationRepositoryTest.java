@@ -1,37 +1,46 @@
 package org.restaurant.repository;
 
 import com.mongodb.MongoWriteException;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.bson.Document;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.restaurant.KafkaConnector;
 import org.restaurant.MongoRepository;
-import org.restaurant.model.Client;
-import org.restaurant.model.Element;
-import org.restaurant.model.Reservation;
-import org.restaurant.model.Table;
-import org.restaurant.repository.mongo.MongoReservationRepository;
+import org.restaurant.model.*;
+import org.restaurant.repository.kafka.KafkaReservationRepository;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ReservationRepositoryTest {
-    private static MongoReservationRepository reservationRepository;
+    private static Repository<Reservation> reservationRepository;
     private static MongoRepository mongoRepository;
+    public static KafkaProducer<String, String> producer;
 
     @BeforeAll
-    public static void setUp() {
+    public static void setUp() throws ExecutionException, InterruptedException {
+        KafkaConnector.initProducer();
+        producer = KafkaConnector.getProducer();
         mongoRepository = new MongoRepository();
-        reservationRepository = new MongoReservationRepository(mongoRepository.getRestaurantDB());
+        reservationRepository = new KafkaReservationRepository(mongoRepository.getRestaurantDB(), producer);
     }
 
     @BeforeEach
     public void clearDatabase() {
         mongoRepository.getRestaurantDB().getCollection("reservations").deleteMany(new Document());
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        producer.close();
     }
 
     @Test
@@ -54,7 +63,7 @@ public class ReservationRepositoryTest {
     @Test
     public void testUpdateReservation() {
         Client client = new Client("John", "Doe", "12345678901");
-        Element element = new Table(20.0, 10, "TableName", true);
+        Element element = new Hall(25.0, 128, "HallName", false, true, 200.0);
         UUID reservationId = UUID.randomUUID();
         Date date = new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime();
         Reservation reservation = new Reservation(reservationId, date, client, element);
@@ -84,7 +93,7 @@ public class ReservationRepositoryTest {
     @Test
     public void testDeleteReservation() {
         Client client = new Client("John", "Doe", "12345678901");
-        Element element = new Table(20.0, 10, "TableName", true);
+        Element element = new Table(20.0, 10, "TableName", false);
         UUID reservationId = UUID.randomUUID();
         Date date = new GregorianCalendar(2024, Calendar.FEBRUARY, 5).getTime();
         Reservation reservation = new Reservation(reservationId, date, client, element);

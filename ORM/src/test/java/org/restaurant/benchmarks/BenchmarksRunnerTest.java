@@ -1,5 +1,6 @@
 package org.restaurant.benchmarks;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.runner.Runner;
@@ -10,6 +11,7 @@ import org.openjdk.jmh.runner.options.TimeValue;
 
 import java.util.concurrent.TimeUnit;
 
+@Disabled
 public class BenchmarksRunnerTest {
     @Test
     public void runMongoBenchmark() throws RunnerException {

@@ -1,6 +1,14 @@
 networks:
   mongo-network: {}
   redis-network: {}
+  redis-reservations-network: {}
+  kafkanet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
+
 services:
   mongo1:
     build: .
@@ -103,6 +111,129 @@ services:
     networks:
       - redis-network
 
+  kafka1:
+    image: docker.io/bitnami/kafka:3.9.0
+    hostname: kafka1
+    container_name: kafka1
+    ports:
+      - target: 9192
+        published: 9192
+        protocol: tcp
+      - target: 9193
+        published: 9193
+        protocol: tcp
+    environment:
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_BROKER_RACK=RACK1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=CONTROLLER://:9193, DOCKER_EXTERNAL://kafka1:9192, DOCKER_INTERNAL://kafka1:19192
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,DOCKER_EXTERNAL:PLAINTEXT,DOCKER_INTERNAL:PLAINTEXT
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=DOCKER_INTERNAL
+      - KAFKA_CFG_ADVERTISED_LISTENERS=DOCKER_EXTERNAL://kafka1:9192,DOCKER_INTERNAL://kafka1:19192
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka1:9193,2@kafka2:9293,3@kafka3:9393
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=false
+      - KAFKA_KRAFT_CLUSTER_ID=YTEwZGUyZDJkYjEwMTFlZj
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_OPTS=-Dlog4j.rootLogger=DEBUG
+    volumes:
+      - kafka1_data:/bitnami/kafka
+    networks:
+      - kafkanet
+    healthcheck:
+      test: kafka-topics.sh --list --bootstrap-server kafka1:19192 || exit 1
+      interval: 3s
+      timeout: 10s
+      retries: 10
+
+  kafka2:
+      image: docker.io/bitnami/kafka:3.9.0
+      hostname: kafka2
+      container_name: kafka2
+      ports:
+        - target: 9292
+          published: 9292
+          protocol: tcp
+        - target: 9293
+          published: 9293
+          protocol: tcp
+      environment:
+        - KAFKA_CFG_NODE_ID=2
+        - KAFKA_CFG_BROKER_RACK=RACK1
+        - KAFKA_CFG_PROCESS_ROLES=broker,controller
+        - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+        - KAFKA_CFG_LISTENERS=CONTROLLER://:9293, DOCKER_EXTERNAL://kafka2:9292, DOCKER_INTERNAL://kafka2:19292
+        - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,DOCKER_EXTERNAL:PLAINTEXT,DOCKER_INTERNAL:PLAINTEXT
+        - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=DOCKER_INTERNAL
+        - KAFKA_CFG_ADVERTISED_LISTENERS=DOCKER_EXTERNAL://kafka2:9292,DOCKER_INTERNAL://kafka2:19292
+        - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka1:9193,2@kafka2:9293,3@kafka3:9393
+        - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=false
+        - KAFKA_KRAFT_CLUSTER_ID=YTEwZGUyZDJkYjEwMTFlZj
+        - ALLOW_PLAINTEXT_LISTENER=yes
+        - KAFKA_OPTS=-Dlog4j.rootLogger=DEBUG
+      volumes:
+        - kafka2_data:/bitnami/kafka
+      networks:
+        - kafkanet
+      healthcheck:
+        test: kafka-topics.sh --list --bootstrap-server kafka2:19292 || exit 1
+        interval: 3s
+        timeout: 10s
+        retries: 10
+
+  kafka3:
+    image: docker.io/bitnami/kafka:3.9.0
+    hostname: kafka3
+    container_name: kafka3
+    ports:
+      - target: 9392
+        published: 9392
+        protocol: tcp
+      - target: 9393
+        published: 9393
+        protocol: tcp
+    environment:
+      - KAFKA_CFG_NODE_ID=3
+      - KAFKA_CFG_BROKER_RACK=RACK1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=CONTROLLER://:9393, DOCKER_EXTERNAL://kafka3:9392, DOCKER_INTERNAL://kafka3:19392
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,DOCKER_EXTERNAL:PLAINTEXT,DOCKER_INTERNAL:PLAINTEXT
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=DOCKER_INTERNAL
+      - KAFKA_CFG_ADVERTISED_LISTENERS=DOCKER_EXTERNAL://kafka3:9392,DOCKER_INTERNAL://kafka3:19392
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka1:9193,2@kafka2:9293,3@kafka3:9393
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=false
+      - KAFKA_KRAFT_CLUSTER_ID=YTEwZGUyZDJkYjEwMTFlZj
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_OPTS=-Dlog4j.rootLogger=DEBUG
+    volumes:
+      - kafka3_data:/bitnami/kafka
+    networks:
+      - kafkanet
+    healthcheck:
+      test: kafka-topics.sh --list --bootstrap-server kafka3:19392 || exit 1
+      interval: 3s
+      timeout: 10s
+      retries: 10
+
+  redis-reservations:
+    image: redis/redis-stack:latest
+    volumes:
+      - redis-reservations-data:/bitnami/redis/data
+    ports:
+      - "8002:8001"
+      - "6380:6379"
+    networks:
+      - redis-reservations-network
+
 volumes:
   redis-stack-data:
+    driver: local
+  kafka1_data:
+    driver: local
+  kafka2_data:
+    driver: local
+  kafka3_data:
+    driver: local
+  redis-reservations-data:
     driver: local
